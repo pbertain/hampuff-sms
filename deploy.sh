@@ -20,9 +20,15 @@ if ! command -v ansible-playbook &> /dev/null; then
 fi
 
 # Check if inventory is configured
-if [ ! -f "ansible/inventory.yml" ] || grep -q "your-server-ip-here" ansible/inventory.yml; then
-    echo "⚠️  Warning: Please configure ansible/inventory.yml with your server details first"
-    echo "   Edit the file and replace placeholder values with your actual server information"
+if [ ! -f "ansible/inventory.yml" ]; then
+    echo "❌ Error: ansible/inventory.yml not found"
+    exit 1
+fi
+
+# Verify hosts are configured
+if ! grep -q "host77.nird.club\|host78.nird.club\|host79.nird.club" ansible/inventory.yml; then
+    echo "⚠️  Warning: Please verify your hosts are configured in ansible/inventory.yml"
+    echo "   Expected hosts: host77.nird.club, host78.nird.club, host79.nird.club"
     exit 1
 fi
 

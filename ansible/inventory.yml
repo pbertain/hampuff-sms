@@ -1,10 +1,12 @@
 all:
   children:
-    hampuff-sms-servers:
+    pb_all:
       hosts:
-        hampuff-sms-01:
-          ansible_host: your-server-ip-here
-          ansible_user: your-ssh-user
-          ansible_ssh_private_key_file: ~/.ssh/your-key
+        host77.nird.club:
+          ansible_host: host77.nird.club
+        host78.nird.club:
+          ansible_host: host78.nird.club
+        host79.nird.club:
+          ansible_host: host79.nird.club
       vars:
         ansible_python_interpreter: /usr/bin/python3

@@ -60,3 +60,5 @@ The service runs on `127.0.0.1:15015` and is designed to work behind an NGINX re
 ## NGINX Configuration
 
 Configure NGINX to proxy requests to `127.0.0.1:15015` and handle TLS termination. The service expects POST requests to `/sms` from Twilio.
+
+**Note**: NGINX configuration is handled by a separate Ansible playbook.
