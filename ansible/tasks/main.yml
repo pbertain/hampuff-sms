@@ -68,7 +68,7 @@
 - name: Copy lib directory
   copy:
     src: ../../lib/
-    dest: "{{ app_dir }}/"
+    dest: "{{ app_dir }}/lib"
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
     mode: '0644'
@@ -77,7 +77,7 @@
 - name: Copy services directory
   copy:
     src: ../../services/
-    dest: "{{ app_dir }}/"
+    dest: "{{ app_dir }}/services"
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
     mode: '0644'
