@@ -1,0 +1,107 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Install system dependencies
+  apt:
+    name:
+      - python3
+      - python3-pip
+      - python3-venv
+      - python3-dev
+      - build-essential
+      - libssl-dev
+      - libffi-dev
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Create application user and group
+  user:
+    name: "{{ app_user }}"
+    group: "{{ app_group }}"
+    system: yes
+    createhome: no
+    shell: /bin/false
+
+- name: Create application directory
+  file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
+- name: Create virtual environment
+  command: python3 -m venv "{{ app_dir }}/venv"
+  args:
+    creates: "{{ app_dir }}/venv/bin/activate"
+  become_user: "{{ app_user }}"
+
+- name: Copy application files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ app_dir }}/"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0644'
+  loop:
+    - app.py
+    - wsgi.py
+    - config.py
+    - requirements.txt
+  notify: restart hampuff-sms
+
+- name: Copy lib directory
+  copy:
+    src: lib/
+    dest: "{{ app_dir }}/"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0644'
+  notify: restart hampuff-sms
+
+- name: Copy services directory
+  copy:
+    src: services/
+    dest: "{{ app_dir }}/"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0644'
+  notify: restart hampuff-sms
+
+- name: Install Python dependencies
+  pip:
+    requirements: "{{ app_dir }}/requirements.txt"
+    virtualenv: "{{ app_dir }}/venv"
+    virtualenv_command: python3 -m venv
+  become_user: "{{ app_user }}"
+  notify: restart hampuff-sms
+
+- name: Copy systemd service file
+  copy:
+    src: hampuff-sms.service
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload systemd
+
+- name: Enable and start hampuff-sms service
+  systemd:
+    name: hampuff-sms
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  notify: restart hampuff-sms
+
+- name: Check service status
+  systemd:
+    name: hampuff-sms
+  register: service_status
+
+- name: Display service status
+  debug:
+    msg: "Hampuff SMS service is {{ 'running' if service_status.status.ActiveState == 'active' else 'not running' }}"

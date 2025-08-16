@@ -1,0 +1,18 @@
+---
+- name: Deploy Hampuff SMS Web Service
+  hosts: hampuff-sms-servers
+  become: yes
+  vars:
+    app_name: hampuff-sms
+    app_user: hampuff-sms
+    app_group: hampuff-sms
+    app_dir: /opt/hampuff-sms
+    app_port: 15015
+    python_version: "3.9"
+    
+  tasks:
+    - name: Include tasks
+      include_tasks: tasks/main.yml
+      
+    - name: Include handlers
+      include_tasks: handlers/main.yml
