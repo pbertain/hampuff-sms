@@ -35,7 +35,8 @@ fi
 # Deploy
 echo "📦 Running Ansible deployment..."
 cd ansible
-ansible-playbook -i inventory.yml main.yml
+#ansible-playbook -i inventory.yml main.yml
+ansible-playbook --ask-vault-pass -u ansible --private-key ~/.ssh/keys/nirdclub__id_ed25519 -i inventory.yml main.yml
 
 echo "✅ Deployment completed!"
 echo ""

@@ -10,9 +10,16 @@
     app_port: 15015
     python_version: "3.9"
     
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: restart hampuff-sms
+      systemd:
+        name: hampuff-sms
+        state: restarted
+
   tasks:
     - name: Include tasks
       include_tasks: tasks/main.yml
-      
-    - name: Include handlers
-      include_tasks: handlers/main.yml
