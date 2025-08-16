@@ -39,6 +39,12 @@
     group: "{{ app_group }}"
     mode: '0755'
 
+- name: Remove existing virtual environment if it exists
+  file:
+    path: "{{ app_dir }}/venv"
+    state: absent
+  become: true
+
 - name: Create virtual environment
   command: python3 -m venv "{{ app_dir }}/venv"
   args:
@@ -53,15 +59,15 @@
     group: "{{ app_group }}"
     mode: '0644'
   loop:
-    - app.py
-    - wsgi.py
-    - config.py
-    - requirements.txt
+    - ../../app.py
+    - ../../wsgi.py
+    - ../../config.py
+    - ../../requirements.txt
   notify: restart hampuff-sms
 
 - name: Copy lib directory
   copy:
-    src: lib/
+    src: ../../lib/
     dest: "{{ app_dir }}/"
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
@@ -70,7 +76,7 @@
 
 - name: Copy services directory
   copy:
-    src: services/
+    src: ../../services/
     dest: "{{ app_dir }}/"
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
