@@ -44,6 +44,7 @@
     path: "{{ app_dir }}/venv"
     state: absent
   become: true
+  ignore_errors: true
 
 - name: Create virtual environment
   command: python3 -m venv "{{ app_dir }}/venv"
