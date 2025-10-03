@@ -1,12 +1,10 @@
 all:
   children:
-    pb_all:
+    hampuff-sms:
       hosts:
-        host77.nird.club:
-          ansible_host: host77.nird.club
-        host78.nird.club:
-          ansible_host: host78.nird.club
-        host79.nird.club:
-          ansible_host: host79.nird.club
+        host74.nird.club:
+          ansible_host: host74.nird.club
+          ansible_user: ansible
+          ansible_ssh_private_key_file: ~/.ssh/keys/nirdclub__id_ed25519
       vars:
         ansible_python_interpreter: /usr/bin/python3

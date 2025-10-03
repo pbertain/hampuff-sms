@@ -63,7 +63,25 @@
     - ../../app.py
     - ../../wsgi.py
     - ../../config.py
+    - ../../models.py
     - ../../requirements.txt
+  notify: restart hampuff-sms
+
+- name: Create templates directory
+  file:
+    path: "{{ app_dir }}/templates"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
+- name: Copy templates
+  copy:
+    src: ../../templates/
+    dest: "{{ app_dir }}/templates"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0644'
   notify: restart hampuff-sms
 
 - name: Copy lib directory
@@ -100,6 +118,15 @@
     group: root
     mode: '0644'
   notify: reload systemd
+
+- name: Create environment file
+  template:
+    src: env.j2
+    dest: "{{ app_dir }}/.env"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0600'
+  notify: restart hampuff-sms
 
 - name: Enable and start hampuff-sms service
   systemd:

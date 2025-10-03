@@ -1,0 +1,15 @@
+# Ansible Vault file for Hampuff SMS secrets
+# To encrypt this file: ansible-vault encrypt group_vars/hampuff-sms/vault.yml
+# To edit: ansible-vault edit group_vars/hampuff-sms/vault.yml
+# To view: ansible-vault view group_vars/hampuff-sms/vault.yml
+
+# Flask configuration
+flask_secret_key: "your-secret-key-here-change-in-production"
+flask_debug: false
+
+# Twilio configuration
+twilio_account_sid: "your-twilio-account-sid"
+twilio_auth_token: "your-twilio-auth-token"
+
+# Environment specific settings
+environment: "{{ environment | default('production') }}"

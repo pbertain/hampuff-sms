@@ -9,6 +9,7 @@ import logging
 from flask import request, current_app
 from twilio.twiml.messaging_response import MessagingResponse
 from lib.hampuff_lib import HampuffDataProvider
+from models import RegistrationDatabase
 
 
 class SMSHandler:
@@ -18,18 +19,28 @@ class SMSHandler:
         """Initialize the SMS handler."""
         self.logger = logging.getLogger(__name__)
         self.hampuff_provider = HampuffDataProvider()
+        self.db = RegistrationDatabase()
     
     def handle_sms_request(self):
         """Process incoming SMS request and return TwiML response."""
         try:
-            # Get SMS body from request
+            # Get SMS body and sender phone number from request
             full_body = request.values.get('Body', '')
+            sender_phone = request.values.get('From', '')
+            
             if not full_body:
                 return self._create_response("No message body received")
             
             # Clean and process the message
             body = full_body.strip()
-            self.logger.info(f"Received SMS: {body}")
+            self.logger.info(f"Received SMS from {sender_phone}: {body}")
+            
+            # Check if sender is registered and opted-in
+            if not self.db.is_user_opted_in(sender_phone):
+                return self._create_response(
+                    "You are not registered for SMS service. Please visit our registration page to opt-in: "
+                    f"{request.url_root}register"
+                )
             
             # Generate appropriate response
             response_text = self._generate_response(body)

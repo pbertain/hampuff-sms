@@ -1,0 +1,56 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      run: |
+        python test_ci.py
+
+  deploy-prod:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Ansible
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ansible
+    
+    - name: Deploy to Production
+      env:
+        ANSIBLE_HOST_KEY_CHECKING: False
+        VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+      run: |
+        echo "$VAULT_PASSWORD" > vault_pass.txt
+        ansible-playbook \
+          --vault-password-file vault_pass.txt \
+          -u ansible \
+          --private-key ~/.ssh/keys/nirdclub__id_ed25519 \
+          -i host74.nird.club, \
+          -e "deploy_path=/opt/hampuff-sms" \
+          -e "environment=production" \
+          ansible/main.yml
+        rm vault_pass.txt
