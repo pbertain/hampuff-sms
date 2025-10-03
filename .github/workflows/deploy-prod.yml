@@ -25,6 +25,8 @@ jobs:
     - name: Run tests
       run: |
         python test_ci.py
+      env:
+        PYTHONPATH: ${{ github.workspace }}
 
   deploy-prod:
     needs: test
