@@ -1,1 +1,0 @@
-# Hampuff library package
