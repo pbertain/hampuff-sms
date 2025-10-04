@@ -1,6 +1,6 @@
 ---
 - name: Deploy Hampuff SMS Web Service
-  hosts: hampuff-sms
+  hosts: hampuff_sms
   become: yes
   vars:
     app_name: hampuff-sms
@@ -9,7 +9,7 @@
     app_dir: "{{ deploy_path | default('/opt/hampuff-sms') }}"
     app_port: 15015
     python_version: "3.11"
-    environment: "{{ environment | default('production') }}"
+    app_environment: "{{ app_environment | default('production') }}"
     
   handlers:
     - name: reload systemd

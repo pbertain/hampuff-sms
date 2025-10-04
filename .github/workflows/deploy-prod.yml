@@ -57,6 +57,6 @@ jobs:
           --private-key ~/.ssh/keys/nirdclub__id_ed25519 \
           -i ansible/inventory.yml \
           -e "deploy_path=/opt/hampuff-sms" \
-          -e "environment=production" \
+          -e "app_environment=production" \
           ansible/main.yml
         rm vault_pass.txt

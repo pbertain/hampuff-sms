@@ -1,6 +1,6 @@
 all:
   children:
-    hampuff-sms:
+    hampuff_sms:
       hosts:
         host74.nird.club:
           ansible_host: host74.nird.club
