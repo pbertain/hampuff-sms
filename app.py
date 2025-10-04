@@ -14,6 +14,25 @@ from models import RegistrationDatabase
 from config import Config
 
 
+def get_version():
+    """Get the current application version."""
+    try:
+        # Try to read version from environment-specific file first
+        env = os.environ.get('ENVIRONMENT', 'production')
+        version_file = f"version.{env}.txt" if env in ['development', 'production'] else "version.txt"
+        
+        if os.path.exists(version_file):
+            with open(version_file, 'r') as f:
+                return f.read().strip()
+        elif os.path.exists("version.txt"):
+            with open("version.txt", 'r') as f:
+                return f.read().strip()
+        else:
+            return "unknown"
+    except Exception:
+        return "unknown"
+
+
 def create_app(config_class=Config):
     """Application factory pattern for Flask app creation."""
     app = Flask(__name__)
@@ -29,7 +48,12 @@ def create_app(config_class=Config):
     @app.route("/health", methods=["GET"])
     def health_check():
         """Health check endpoint for monitoring."""
-        return {"status": "healthy", "service": "hampuff-sms"}
+        return {
+            "status": "healthy", 
+            "service": "hampuff-sms",
+            "version": get_version(),
+            "environment": os.environ.get('ENVIRONMENT', 'production')
+        }
     
     @app.route("/sms", methods=["POST"])
     def sms_reply():
@@ -40,7 +64,9 @@ def create_app(config_class=Config):
     def register():
         """Handle user registration for SMS opt-in."""
         if request.method == "GET":
-            return render_template("register.html")
+            return render_template("register.html", 
+                                 version=get_version(),
+                                 environment=os.environ.get('ENVIRONMENT', 'production'))
         
         # Handle POST request
         try:
@@ -77,15 +103,21 @@ def create_app(config_class=Config):
             app.logger.info(f"New registration: {full_name} ({call_sign}) - {registration['phone_normalized']}")
             
             flash(f"Registration successful! You are now opted-in to receive SMS messages at {registration['phone_normalized']}", "success")
-            return render_template("register.html")
+            return render_template("register.html", 
+                                 version=get_version(),
+                                 environment=os.environ.get('ENVIRONMENT', 'production'))
             
         except ValueError as e:
             flash(str(e), "error")
-            return render_template("register.html")
+            return render_template("register.html", 
+                                 version=get_version(),
+                                 environment=os.environ.get('ENVIRONMENT', 'production'))
         except Exception as e:
             app.logger.error(f"Registration error: {str(e)}")
             flash("An error occurred during registration. Please try again.", "error")
-            return render_template("register.html")
+            return render_template("register.html", 
+                                 version=get_version(),
+                                 environment=os.environ.get('ENVIRONMENT', 'production'))
     
     @app.route("/admin/registrations", methods=["GET"])
     def admin_registrations():

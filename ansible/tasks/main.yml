@@ -65,6 +65,8 @@
     - ../../config.py
     - ../../models.py
     - ../../requirements.txt
+    - ../../version.txt
+    - ../../version.{{ 'dev' if app_environment == 'development' else 'prod' }}.txt
   notify: restart hampuff-sms
 
 - name: Create templates directory
@@ -113,7 +115,7 @@
 - name: Copy systemd service file
   template:
     src: hampuff-sms.service
-    dest: /etc/systemd/system/hampuff-sms.service
+    dest: /etc/systemd/system/{{ app_name }}.service
     owner: root
     group: root
     mode: '0644'
@@ -130,7 +132,7 @@
 
 - name: Enable and start hampuff-sms service
   systemd:
-    name: hampuff-sms
+    name: "{{ app_name }}"
     enabled: yes
     state: started
     daemon_reload: yes
@@ -138,9 +140,9 @@
 
 - name: Check service status
   systemd:
-    name: hampuff-sms
+    name: "{{ app_name }}"
   register: service_status
 
 - name: Display service status
   debug:
-    msg: "Hampuff SMS service is {{ 'running' if service_status.status.ActiveState == 'active' else 'not running' }}"
+    msg: "Hampuff SMS service ({{ app_name }}) is {{ 'running' if service_status.status.ActiveState == 'active' else 'not running' }}"
