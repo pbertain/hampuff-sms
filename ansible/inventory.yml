@@ -5,6 +5,5 @@ all:
         host74.nird.club:
           ansible_host: host74.nird.club
           ansible_user: ansible
-          ansible_ssh_private_key_file: ~/.ssh/keys/nirdclub__id_ed25519
       vars:
         ansible_python_interpreter: /usr/bin/python3
