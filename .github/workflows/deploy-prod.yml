@@ -46,7 +46,11 @@ jobs:
         ANSIBLE_HOST_KEY_CHECKING: False
         VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
       run: |
+        echo "Debug: VAULT_PASSWORD length: ${#VAULT_PASSWORD}"
+        echo "Debug: VAULT_PASSWORD starts with: ${VAULT_PASSWORD:0:10}..."
         echo "$VAULT_PASSWORD" > vault_pass.txt
+        echo "Debug: vault_pass.txt contents:"
+        cat vault_pass.txt
         ansible-playbook \
           --vault-password-file vault_pass.txt \
           -u ansible \
