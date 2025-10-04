@@ -10,7 +10,7 @@ Group={{ app_group }}
 WorkingDirectory={{ app_dir }}
 Environment=PATH={{ app_dir }}/venv/bin
 EnvironmentFile={{ app_dir }}/.env
-ExecStart={{ app_dir }}/venv/bin/gunicorn --bind 127.0.0.1:{{ app_port }} --workers 2 --worker-class sync --timeout 30 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100 wsgi:app
+ExecStart={{ app_dir }}/venv/bin/gunicorn --bind 0.0.0.0:{{ app_port }} --workers 2 --worker-class sync --timeout 30 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100 wsgi:app
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=5
