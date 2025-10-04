@@ -55,7 +55,7 @@ jobs:
           --vault-password-file vault_pass.txt \
           -u ansible \
           --private-key ~/.ssh/keys/nirdclub__id_ed25519 \
-          -i host74.nird.club, \
+          -i ansible/inventory.yml \
           -e "deploy_path=/opt/hampuff-sms" \
           -e "environment=production" \
           ansible/main.yml
