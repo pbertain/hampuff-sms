@@ -54,6 +54,13 @@ jobs:
         cat vault_pass.txt
         echo "$SSH_PRIVATE_KEY" > ssh_key
         chmod 600 ssh_key
+        echo "Debug: SSH key file contents (first 50 chars):"
+        head -c 50 ssh_key
+        echo ""
+        echo "Debug: SSH key file size:"
+        wc -c ssh_key
+        echo "Debug: SSH key file permissions:"
+        ls -la ssh_key
         ansible-playbook \
           --vault-password-file vault_pass.txt \
           -u ansible \
