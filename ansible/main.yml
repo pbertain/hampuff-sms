@@ -10,6 +10,7 @@
     app_port: 15016
     python_version: "3.11"
     app_environment: "{{ app_environment | default('production') }}"
+    app_domain: "{{ 'dev.hampuff.com' if app_environment == 'development' else 'www.hampuff.com' }}"
   vars_files:
     - group_vars/hampuff-sms/vault.yml
     
