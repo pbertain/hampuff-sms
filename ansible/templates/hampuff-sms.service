@@ -1,5 +1,5 @@
 [Unit]
-Description=Hampuff SMS Web Service
+Description=Hampuff SMS Web Service ({{ app_environment }})
 After=network.target
 Wants=network.target
 
