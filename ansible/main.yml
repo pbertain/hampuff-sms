@@ -7,7 +7,7 @@
     app_user: hampuff-sms
     app_group: hampuff-sms
     app_dir: "{{ deploy_path | default('/opt/hampuff-sms') }}"
-    app_port: 15016
+    app_port: "{{ 15016 if app_environment == 'development' else 15015 }}"
     python_version: "3.11"
     app_environment: "{{ app_environment | default('production') }}"
     app_domain: "{{ 'dev.hampuff.com' if app_environment == 'development' else 'www.hampuff.com' }}"
