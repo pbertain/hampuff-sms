@@ -84,10 +84,10 @@
     mode: '0644'
   notify: restart hampuff-sms
 
-- name: Copy lib directory
+- name: Copy hampuff_lib directory
   copy:
-    src: ../../lib/
-    dest: "{{ app_dir }}/lib"
+    src: ../../hampuff_lib/
+    dest: "{{ app_dir }}/hampuff_lib"
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
     mode: '0644'

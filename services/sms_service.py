@@ -14,7 +14,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 # Add the project root to the Python path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib.hampuff_lib import HampuffDataProvider
+from hampuff_lib.hampuff_lib import HampuffDataProvider
 from models import RegistrationDatabase
 
 
