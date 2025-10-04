@@ -68,12 +68,8 @@ jobs:
         echo "$NEW_VERSION" > version.dev.txt
         echo "$NEW_VERSION" > version.txt
         
-        # Commit and push version bump
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add version.dev.txt version.txt
-        git commit -m "Bump development version to $NEW_VERSION"
-        git push origin dev
+        # Set version as environment variable for Ansible
+        echo "DEPLOY_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
     - name: Deploy to Development
       env:
