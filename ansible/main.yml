@@ -1,15 +1,18 @@
 ---
 - name: Deploy Hampuff SMS Web Service
-  hosts: hampuff-sms
+  hosts: hampuff_sms
   become: yes
   vars:
-    app_name: hampuff-sms
+    app_name: "hampuff-sms-{{ 'dev' if app_environment == 'development' else 'prod' }}"
     app_user: hampuff-sms
     app_group: hampuff-sms
     app_dir: "{{ deploy_path | default('/opt/hampuff-sms') }}"
-    app_port: 15015
+    app_port: "{{ 15016 if app_environment == 'development' else 15015 }}"
     python_version: "3.11"
-    environment: "{{ environment | default('production') }}"
+    app_environment: "{{ app_environment | default('production') }}"
+    app_domain: "{{ 'dev.hampuff.com' if app_environment == 'development' else 'www.hampuff.com' }}"
+  vars_files:
+    - group_vars/hampuff-sms/vault.yml
     
   handlers:
     - name: reload systemd

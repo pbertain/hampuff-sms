@@ -111,9 +111,9 @@
   notify: restart hampuff-sms
 
 - name: Copy systemd service file
-  copy:
+  template:
     src: hampuff-sms.service
-    dest: /etc/systemd/system/
+    dest: /etc/systemd/system/hampuff-sms.service
     owner: root
     group: root
     mode: '0644'
