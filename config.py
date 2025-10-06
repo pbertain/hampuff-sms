@@ -29,6 +29,9 @@ class Config:
     )
     DEFAULT_WRONG_NUMBER_MESSAGE = "Wrong number. Please waste someone else's time."
     
+    # Database settings
+    REGISTRATION_DB_PATH = os.environ.get("REGISTRATION_DB_PATH", "/opt/hampuff-data/registrations.db")
+    
     # Logging
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 

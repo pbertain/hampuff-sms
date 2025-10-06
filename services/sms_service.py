@@ -42,10 +42,16 @@ class SMSHandler:
             self.logger.info(f"Received SMS from {sender_phone}: {body}")
             
             # Check if sender is registered and opted-in
-            if not self.db.is_user_opted_in(sender_phone):
+            try:
+                if not self.db.is_user_opted_in(sender_phone):
+                    return self._create_response(
+                        "You are not registered for SMS service. Please visit www.hampuff.com/register to opt-in."
+                    )
+            except Exception as e:
+                self.logger.error(f"Database error checking registration: {str(e)}")
+                # Fail closed - don't send SMS if we can't verify registration
                 return self._create_response(
-                    "You are not registered for SMS service. Please visit our registration page to opt-in: "
-                    f"{request.url_root}register"
+                    "Service temporarily unavailable. Please try again later."
                 )
             
             # Generate appropriate response

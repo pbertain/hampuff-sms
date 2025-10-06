@@ -62,73 +62,9 @@ def create_app(config_class=Config):
     
     @app.route("/register", methods=["GET", "POST"])
     def register():
-        """Handle user registration for SMS opt-in."""
-        if request.method == "GET":
-            return render_template("register.html", 
-                                 version=get_version(),
-                                 environment=os.environ.get('ENVIRONMENT', 'production'))
-        
-        # Handle POST request
-        try:
-            # Get form data
-            full_name = request.form.get("full_name", "").strip()
-            call_sign = request.form.get("call_sign", "").strip().upper()
-            phone_number = request.form.get("phone_number", "").strip()
-            opted_in = request.form.get("opted_in") == "1"
-            
-            # Validate required fields
-            if not all([full_name, call_sign, phone_number]):
-                flash("Please fill in all required fields.", "error")
-                return render_template("register.html")
-            
-            if not opted_in:
-                flash("You must opt-in to receive SMS messages.", "error")
-                return render_template("register.html")
-            
-            # Validate call sign format (basic validation)
-            if len(call_sign) < 3 or len(call_sign) > 7:
-                flash("Please enter a valid amateur radio call sign.", "error")
-                return render_template("register.html")
-            
-            # Register user
-            registration = db.register_user(
-                full_name=full_name,
-                call_sign=call_sign,
-                phone_number=phone_number,
-                opted_in=opted_in,
-                ip_address=request.remote_addr,
-                user_agent=request.headers.get("User-Agent")
-            )
-            
-            app.logger.info(f"New registration: {full_name} ({call_sign}) - {registration['phone_normalized']}")
-            
-            flash(f"Registration successful! You are now opted-in to receive SMS messages at {registration['phone_normalized']}", "success")
-            return render_template("register.html", 
-                                 version=get_version(),
-                                 environment=os.environ.get('ENVIRONMENT', 'production'))
-            
-        except ValueError as e:
-            flash(str(e), "error")
-            return render_template("register.html", 
-                                 version=get_version(),
-                                 environment=os.environ.get('ENVIRONMENT', 'production'))
-        except Exception as e:
-            app.logger.error(f"Registration error: {str(e)}")
-            flash("An error occurred during registration. Please try again.", "error")
-            return render_template("register.html", 
-                                 version=get_version(),
-                                 environment=os.environ.get('ENVIRONMENT', 'production'))
+        """Temporary registration endpoint - will be moved to main website."""
+        return {"message": "Registration service moved to www.hampuff.com/register", "status": "moved"}, 301
     
-    @app.route("/admin/registrations", methods=["GET"])
-    def admin_registrations():
-        """Admin endpoint to view all registrations."""
-        # In production, you'd want proper authentication here
-        registrations = db.get_all_registrations()
-        return {
-            "registrations": registrations,
-            "total_count": len(registrations),
-            "opted_in_count": len([r for r in registrations if r["opted_in"]])
-        }
     
     @app.after_request
     def add_security_headers(response):

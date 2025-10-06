@@ -70,6 +70,13 @@ jobs:
         
         # Set version as environment variable for Ansible
         echo "DEPLOY_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+        
+        # Commit version changes
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add version.dev.txt version.txt
+        git commit -m "Bump dev version to $NEW_VERSION [skip ci]" || echo "No changes to commit"
+        git push
 
     - name: Deploy to Development
       env:
@@ -91,6 +98,7 @@ jobs:
         wc -c ssh_key
         echo "Debug: SSH key file permissions:"
         ls -la ssh_key
+        echo "Running Ansible playbook..."
         ansible-playbook \
           --vault-password-file vault_pass.txt \
           -u ansible \
@@ -98,5 +106,27 @@ jobs:
           -i ansible/inventory.yml \
           -e "deploy_path=/opt/hampuff-sms-dev" \
           -e "app_environment=development" \
+          -v \
           ansible/main.yml
+        
+        # Ensure service is restarted and systemd is reloaded
+        echo "Restarting service and reloading systemd..."
+        ansible all \
+          --vault-password-file vault_pass.txt \
+          -u ansible \
+          --private-key ssh_key \
+          -i ansible/inventory.yml \
+          -m systemd \
+          -a "name=hampuff-sms-dev state=restarted daemon_reload=yes"
+        
+        # Verify deployment
+        echo "Verifying deployment..."
+        ansible all \
+          --vault-password-file vault_pass.txt \
+          -u ansible \
+          --private-key ssh_key \
+          -i ansible/inventory.yml \
+          -m uri \
+          -a "url=http://127.0.0.1:15016/health return_content=yes"
+        
         rm vault_pass.txt ssh_key

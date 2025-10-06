@@ -1,0 +1,5 @@
+# Temporary unencrypted vault file for development testing
+flask_secret_key: "dev-secret-key-change-in-production"
+flask_debug: true
+twilio_account_sid: "dev-account-sid"
+twilio_auth_token: "dev-auth-token"

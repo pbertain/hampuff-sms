@@ -13,9 +13,21 @@ import logging
 class RegistrationDatabase:
     """Handles database operations for user registrations."""
     
-    def __init__(self, db_path: str = "registrations.db"):
+    def __init__(self, db_path: str = None):
         """Initialize the database connection."""
-        self.db_path = db_path
+        if db_path is None:
+            # Try shared location first, fallback to local
+            import os
+            shared_path = "/opt/hampuff-data/registrations.db"
+            local_path = "registrations.db"
+            
+            if os.path.exists(shared_path):
+                self.db_path = shared_path
+            else:
+                self.db_path = local_path
+        else:
+            self.db_path = db_path
+            
         self.logger = logging.getLogger(__name__)
         self._init_database()
     
@@ -222,3 +234,16 @@ class RegistrationDatabase:
         """
         user = self.get_user_by_phone(phone_number)
         return user and user.get('opted_in', False)
+    
+    def is_user_registered(self, phone_number: str) -> bool:
+        """
+        Check if a user is registered (regardless of opt-in status).
+        
+        Args:
+            phone_number: Phone number (will be normalized)
+            
+        Returns:
+            True if user is registered, False otherwise
+        """
+        user = self.get_user_by_phone(phone_number)
+        return user is not None

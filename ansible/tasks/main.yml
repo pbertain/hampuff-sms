@@ -39,6 +39,14 @@
     group: "{{ app_group }}"
     mode: '0755'
 
+- name: Create shared data directory
+  file:
+    path: /opt/hampuff-data
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
 - name: Remove existing virtual environment if it exists
   file:
     path: "{{ app_dir }}/venv"
