@@ -20,6 +20,32 @@ class HampuffDataProvider:
     USER_AGENT = 'HamPuff/14.074/230926'
     BASE_URL = 'http://www.hamqsl.com/solarxml.php'
     
+    # Timezone code mapping to pytz timezone objects
+    TIMEZONE_MAP = {
+        # US Continental timezones
+        'EST': pytz.timezone('US/Eastern'),  # Eastern Standard Time
+        'EDT': pytz.timezone('US/Eastern'),   # Eastern Daylight Time (same tz)
+        'CST': pytz.timezone('US/Central'),  # Central Standard Time
+        'CDT': pytz.timezone('US/Central'),  # Central Daylight Time (same tz)
+        'MST': pytz.timezone('US/Mountain'),  # Mountain Standard Time
+        'MDT': pytz.timezone('US/Mountain'), # Mountain Daylight Time (same tz)
+        'PST': pytz.timezone('US/Pacific'),   # Pacific Standard Time
+        'PDT': pytz.timezone('US/Pacific'),   # Pacific Daylight Time (same tz)
+        # Alaska
+        'AKST': pytz.timezone('US/Alaska'),  # Alaska Standard Time
+        'AKDT': pytz.timezone('US/Alaska'),  # Alaska Daylight Time (same tz)
+        # Hawaii
+        'HST': pytz.timezone('US/Hawaii'),  # Hawaii Standard Time (no DST)
+        # Puerto Rico
+        'AST': pytz.timezone('America/Puerto_Rico'),  # Atlantic Standard Time (no DST)
+        # Guam
+        'ChST': pytz.timezone('Pacific/Guam'),  # Chamorro Standard Time (no DST)
+        'GST': pytz.timezone('Pacific/Guam'),    # Guam Standard Time (alternative abbreviation)
+        # UTC/GMT
+        'UTC': pytz.UTC,  # Coordinated Universal Time
+        'GMT': pytz.UTC,  # Greenwich Mean Time (same as UTC)
+    }
+    
     def __init__(self):
         """Initialize the hampuff data provider."""
         self.logger = logging.getLogger(__name__)
@@ -28,7 +54,7 @@ class HampuffDataProvider:
     
     def get_hampuff_data(self, hampuff_args: str) -> str:
         """
-        Get hampuff data for the given arguments.
+        Get hampuff data for the given arguments (legacy format).
         
         Args:
             hampuff_args: String like 'hampuffe' or 'hampuffp' for timezone
@@ -55,6 +81,65 @@ class HampuffDataProvider:
         except Exception as e:
             self.logger.error(f"Error getting hampuff data: {str(e)}")
             raise
+    
+    def get_hampuff_data_for_timezone(self, timezone_code: str) -> str:
+        """
+        Get hampuff data for the given timezone code.
+        
+        Args:
+            timezone_code: Timezone code like 'EST', 'PDT', 'CST', etc.
+            
+        Returns:
+            Formatted string with solar data
+            
+        Raises:
+            ValueError: If timezone code is invalid
+        """
+        try:
+            # Validate and get timezone
+            timezone = self._get_timezone_from_code(timezone_code)
+            
+            # Fetch and parse solar data
+            solar_data = self._fetch_solar_data()
+            
+            # Format response
+            return self._format_hampuff_response(solar_data, timezone)
+            
+        except Exception as e:
+            self.logger.error(f"Error getting hampuff data: {str(e)}")
+            raise
+    
+    def _get_timezone_from_code(self, timezone_code: str) -> pytz.timezone:
+        """
+        Get pytz timezone object from timezone code.
+        
+        Args:
+            timezone_code: Timezone code (e.g., 'EST', 'PDT', 'CST', 'ChST')
+            
+        Returns:
+            pytz timezone object
+            
+        Raises:
+            ValueError: If timezone code is not supported
+        """
+        # Try exact match first (for codes like 'ChST' that have mixed case)
+        if timezone_code in self.TIMEZONE_MAP:
+            return self.TIMEZONE_MAP[timezone_code]
+        
+        # Try uppercase match for case-insensitive lookup
+        code_upper = timezone_code.upper()
+        # Create a case-insensitive lookup map
+        upper_map = {k.upper(): v for k, v in self.TIMEZONE_MAP.items()}
+        
+        if code_upper in upper_map:
+            return upper_map[code_upper]
+        
+        # Not found
+        valid_codes = ', '.join(sorted(self.TIMEZONE_MAP.keys()))
+        raise ValueError(
+            f"Invalid timezone code '{timezone_code}'. "
+            f"Supported codes: {valid_codes}"
+        )
     
     def _validate_hampuff_args(self, hampuff_args: str) -> None:
         """Validate the hampuff arguments."""
@@ -109,9 +194,12 @@ class HampuffDataProvider:
             # Parse update time
             update_time = self._parse_update_time(solar_data['updated'], timezone)
             
+            # Get timezone name for display (use the zone name)
+            tz_name = str(timezone).split('/')[-1] if '/' in str(timezone) else str(timezone)
+            
             # Format the response
             response = (
-                f"[Hampuff - {timezone}] Updated: {update_time}\n"
+                f"[Hampuff - {tz_name}] Updated: {update_time}\n"
                 f"\tSolar Flux  = {solar_data.get('solarflux', 'N/A')}\n"
                 f"\tA Index     = {solar_data.get('aindex', 'N/A')}\n"
                 f"\tK Index     = {solar_data.get('kindex', 'N/A')}\n"

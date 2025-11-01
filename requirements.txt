@@ -5,3 +5,5 @@ xmltodict==0.13.0
 pytz==2023.3
 gunicorn==21.2.0
 phonenumbers==8.13.25
+Flask-Limiter==3.5.0
+flask-cors==4.0.0

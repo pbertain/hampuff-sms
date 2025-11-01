@@ -1,0 +1,627 @@
+openapi: 3.0.3
+info:
+  title: HamPuff SMS API
+  description: |
+    API for accessing HamPuff ham radio solar propagation data and managing SMS registrations.
+    
+    All endpoints support rate limiting. JSON endpoints include CORS headers for browser access.
+    
+    **Rate Limits:**
+    - Help/Propagation endpoints: 100 requests/hour
+    - Registration endpoint: 10 requests/hour  
+    - Opt-in/Out endpoints: 20 requests/hour
+    
+    **Base URLs:**
+    - Production: `https://sms.hampuff.com`
+    - Development: `https://sms-dev.hampuff.com`
+    
+  version: 1.0.0
+  contact:
+    name: HamPuff Support
+    url: https://www.hampuff.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://sms.hampuff.com
+    description: Production server
+  - url: https://sms-dev.hampuff.com
+    description: Development server
+  - url: http://localhost:15015
+    description: Local development server
+
+tags:
+  - name: Information
+    description: Information and help endpoints
+  - name: Propagation
+    description: Solar propagation data endpoints
+  - name: Registration
+    description: User registration and opt-in/out management
+
+paths:
+  /sms/api/v1/help:
+    get:
+      tags:
+        - Information
+      summary: Get help information
+      description: Returns help text with all available commands and supported timezones
+      operationId: getHelp
+      responses:
+        '200':
+          description: Help information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  help:
+                    type: string
+                    description: Help text with commands and timezone information
+                  format:
+                    type: string
+                    example: text
+                  version:
+                    type: string
+                    example: v1
+              example:
+                help: |
+                  HamPuff SMS Commands:
+                  
+                  PROPAGATION:
+                  • prop [TIMEZONE] - Get solar propagation data
+                  • propagation [TIMEZONE] - Same as above
+                  • hampuffe - Legacy (Eastern time)
+                  • hampuffp - Legacy (Pacific time)
+                  
+                  REGISTRATION:
+                  • START or REGISTER - Opt-in to SMS service
+                  • STOP or UNREGISTER - Opt-out from SMS service
+                  
+                  SUPPORTED TIMEZONES:
+                  US Continental: EST, EDT, CST, CDT, MST, MDT, PST, PDT
+                  Alaska: AKST, AKDT
+                  Hawaii: HST
+                  Puerto Rico: AST
+                  Guam: ChST, GST
+                  Universal: UTC, GMT
+                format: text
+                version: v1
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sms/api/v1/propagation/{timezone}:
+    get:
+      tags:
+        - Propagation
+      summary: Get solar propagation data
+      description: |
+        Returns solar propagation data for the specified timezone.
+        
+        **Supported Timezones:**
+        - US Continental: EST, EDT, CST, CDT, MST, MDT, PST, PDT
+        - Alaska: AKST, AKDT
+        - Hawaii: HST
+        - Puerto Rico: AST
+        - Guam: ChST, GST
+        - Universal: UTC, GMT
+      operationId: getPropagation
+      parameters:
+        - name: timezone
+          in: path
+          required: true
+          description: Timezone code (case-insensitive)
+          schema:
+            type: string
+            enum: [EST, EDT, CST, CDT, MST, MDT, PST, PDT, AKST, AKDT, HST, AST, ChST, GST, UTC, GMT]
+            example: EST
+      responses:
+        '200':
+          description: Propagation data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropagationData'
+              example:
+                timezone: EST
+                timezone_name: Eastern
+                updated: "Mon 15 Jan 14:30"
+                data:
+                  solar_flux: "150"
+                  a_index: "5"
+                  k_index: "2"
+                  sunspots: "120"
+                  muf: "25.6"
+                  xray: "B1.2"
+                  solar_winds: "380 km/s"
+                raw_updated_utc: "15 Jan 2024 1930 UTC"
+        '400':
+          description: Invalid timezone code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid timezone code"
+                timezone: "INVALID"
+                message: "Invalid timezone code 'INVALID'. Supported codes: EST, EDT, CST, CDT, MST, MDT, PST, PDT, AKST, AKDT, HST, AST, ChST, GST, UTC, GMT"
+                supported_timezones:
+                  - EST
+                  - EDT
+                  - CST
+                  - CDT
+                  - MST
+                  - MDT
+                  - PST
+                  - PDT
+                  - AKST
+                  - AKDT
+                  - HST
+                  - AST
+                  - ChST
+                  - GST
+                  - UTC
+                  - GMT
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sms/api/v1/prop/{timezone}:
+    get:
+      tags:
+        - Propagation
+      summary: Get solar propagation data (alias)
+      description: Alias for `/sms/api/v1/propagation/{timezone}`. Returns the same data.
+      operationId: getPropagationAlias
+      parameters:
+        - name: timezone
+          in: path
+          required: true
+          description: Timezone code (case-insensitive)
+          schema:
+            type: string
+            enum: [EST, EDT, CST, CDT, MST, MDT, PST, PDT, AKST, AKDT, HST, AST, ChST, GST, UTC, GMT]
+            example: PDT
+      responses:
+        '200':
+          description: Propagation data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropagationData'
+        '400':
+          description: Invalid timezone code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sms/api/v1/register:
+    post:
+      tags:
+        - Registration
+      summary: Register a new user
+      description: |
+        Register a new user with full information required for A2P 10DLC compliance.
+        
+        **Rate Limit:** 10 requests per hour per IP address
+        
+        **Required Fields:**
+        - `full_name`: User's full name
+        - `call_sign`: Amateur radio call sign
+        - `phone_number`: Phone number (any format, will be normalized)
+        - `opted_in`: Boolean indicating user opts in to SMS service
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+            example:
+              full_name: "John Doe"
+              call_sign: "W1ABC"
+              phone_number: "+15551234567"
+              opted_in: true
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+              example:
+                status: "success"
+                message: "Registration successful"
+                data:
+                  id: 123
+                  phone_normalized: "+15551234567"
+                  opted_in: true
+        '400':
+          description: Invalid request or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingFields:
+                  value:
+                    error: "Missing required fields"
+                    missing_fields: ["call_sign"]
+                    required_fields: ["full_name", "call_sign", "phone_number", "opted_in"]
+                duplicate:
+                  value:
+                    error: "Registration failed"
+                    message: "Phone number already registered"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sms/api/v1/start/{phone_number}:
+    post:
+      tags:
+        - Registration
+      summary: Opt-in an already registered user
+      description: |
+        Opt-in a user who has already been registered via the web form or API.
+        This endpoint will not create new registrations - the user must already exist.
+        
+        **Rate Limit:** 20 requests per hour per IP address
+      operationId: optInUser
+      parameters:
+        - name: phone_number
+          in: path
+          required: true
+          description: Phone number (any format, will be normalized)
+          schema:
+            type: string
+            example: "+15551234567"
+      responses:
+        '200':
+          description: User opted in successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptInOutResponse'
+              example:
+                status: "success"
+                message: "User opted in successfully"
+                phone_normalized: "+15551234567"
+                opted_in: true
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "User not found"
+                message: "Phone number not registered. Please register first at www.hampuff.com/register"
+                phone_number: "+15551234567"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sms/api/v1/register/{phone_number}:
+    post:
+      tags:
+        - Registration
+      summary: Opt-in an already registered user (alias)
+      description: Alias for `/sms/api/v1/start/{phone_number}`. Same functionality.
+      operationId: optInUserAlias
+      parameters:
+        - name: phone_number
+          in: path
+          required: true
+          description: Phone number (any format, will be normalized)
+          schema:
+            type: string
+            example: "+15551234567"
+      responses:
+        '200':
+          description: User opted in successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptInOutResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sms/api/v1/stop/{phone_number}:
+    post:
+      tags:
+        - Registration
+      summary: Opt-out a user
+      description: |
+        Opt-out a user from SMS service. Works even if the user is not currently registered.
+        
+        **Rate Limit:** 20 requests per hour per IP address
+      operationId: optOutUser
+      parameters:
+        - name: phone_number
+          in: path
+          required: true
+          description: Phone number (any format, will be normalized)
+          schema:
+            type: string
+            example: "+15551234567"
+      responses:
+        '200':
+          description: User opted out successfully (or not registered)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptInOutResponse'
+              examples:
+                optedOut:
+                  value:
+                    status: "success"
+                    message: "User opted out successfully"
+                    opted_in: false
+                notRegistered:
+                  value:
+                    status: "success"
+                    message: "Phone number not currently registered. No action needed."
+                    opted_in: false
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sms/api/v1/unregister/{phone_number}:
+    post:
+      tags:
+        - Registration
+      summary: Opt-out a user (alias)
+      description: Alias for `/sms/api/v1/stop/{phone_number}`. Same functionality.
+      operationId: optOutUserAlias
+      parameters:
+        - name: phone_number
+          in: path
+          required: true
+          description: Phone number (any format, will be normalized)
+          schema:
+            type: string
+            example: "+15551234567"
+      responses:
+        '200':
+          description: User opted out successfully (or not registered)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptInOutResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    PropagationData:
+      type: object
+      required:
+        - timezone
+        - updated
+        - data
+      properties:
+        timezone:
+          type: string
+          description: Timezone code used in the request
+          example: EST
+        timezone_name:
+          type: string
+          description: Full timezone name
+          example: Eastern
+        updated:
+          type: string
+          description: Formatted update time in the requested timezone
+          example: "Mon 15 Jan 14:30"
+        data:
+          type: object
+          required:
+            - solar_flux
+            - a_index
+            - k_index
+            - sunspots
+            - muf
+            - xray
+            - solar_winds
+          properties:
+            solar_flux:
+              type: string
+              description: Solar flux index
+              example: "150"
+            a_index:
+              type: string
+              description: A index (geomagnetic index)
+              example: "5"
+            k_index:
+              type: string
+              description: K index (geomagnetic index)
+              example: "2"
+            sunspots:
+              type: string
+              description: Sunspot number
+              example: "120"
+            muf:
+              type: string
+              description: Maximum Usable Frequency
+              example: "25.6"
+            xray:
+              type: string
+              description: X-ray flux
+              example: "B1.2"
+            solar_winds:
+              type: string
+              description: Solar wind speed
+              example: "380 km/s"
+        raw_updated_utc:
+          type: string
+          description: Raw UTC update time from data source
+          example: "15 Jan 2024 1930 UTC"
+
+    RegistrationRequest:
+      type: object
+      required:
+        - full_name
+        - call_sign
+        - phone_number
+        - opted_in
+      properties:
+        full_name:
+          type: string
+          description: User's full name
+          example: "John Doe"
+        call_sign:
+          type: string
+          description: Amateur radio call sign
+          example: "W1ABC"
+        phone_number:
+          type: string
+          description: Phone number in any format (will be normalized to E.164)
+          example: "+15551234567"
+        opted_in:
+          type: boolean
+          description: Whether user opts in to SMS service
+          example: true
+
+    RegistrationResponse:
+      type: object
+      required:
+        - status
+        - message
+        - data
+      properties:
+        status:
+          type: string
+          example: "success"
+        message:
+          type: string
+          example: "Registration successful"
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: Registration ID
+              example: 123
+            phone_normalized:
+              type: string
+              description: Normalized phone number (E.164 format)
+              example: "+15551234567"
+            opted_in:
+              type: boolean
+              example: true
+
+    OptInOutResponse:
+      type: object
+      required:
+        - status
+        - message
+        - opted_in
+      properties:
+        status:
+          type: string
+          example: "success"
+        message:
+          type: string
+          example: "User opted in successfully"
+        phone_normalized:
+          type: string
+          description: Normalized phone number (E.164 format)
+          example: "+15551234567"
+        opted_in:
+          type: boolean
+          example: true
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Invalid timezone code"
+        message:
+          type: string
+          description: Detailed error message
+          example: "Invalid timezone code 'INVALID'"
+        timezone:
+          type: string
+          description: Timezone code that was requested (for timezone errors)
+          example: "INVALID"
+        missing_fields:
+          type: array
+          items:
+            type: string
+          description: List of missing required fields (for registration errors)
+        required_fields:
+          type: array
+          items:
+            type: string
+          description: List of all required fields (for registration errors)
+        supported_timezones:
+          type: array
+          items:
+            type: string
+          description: List of supported timezone codes (for timezone errors)
+        phone_number:
+          type: string
+          description: Phone number in request (for registration errors)
+
+  responses:
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Rate limit exceeded"
+              message:
+                type: string
+                example: "100 per 1 hour"
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: Request limit per time window
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current time window
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Time when the rate limit resets (Unix timestamp)
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Internal server error"
+            message: "Failed to retrieve propagation data"
+
